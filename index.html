@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سوق المتدات | توقع أسعار ليمتدات روبلوكس</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f5;--panel:#fff;--ink:#14212b;--mute:#5d6b76;--line:#d8e0e6;--up:#0a8f5a;--down:#d1344a;--accent:#14507a}
+@media(prefers-color-scheme:dark){:root{--bg:#0e161d;--panel:#16212a;--ink:#e8eef2;--mute:#8fa0ad;--line:#26343f;--up:#2bc486;--down:#ff6178;--accent:#6bb4e6}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;line-height:1.6}
+header{padding:28px 20px 8px;max-width:1100px;margin:auto}
+h1{margin:0;font-size:1.9rem;font-weight:700}
+header p{margin:4px 0 0;color:var(--mute)}
+.bar{max-width:1100px;margin:16px auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.bar label{color:var(--mute);font-size:.9rem}
+select,input{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+input{flex:1;min-width:180px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.status{max-width:1100px;margin:0 auto;padding:0 20px;color:var(--mute);font-size:.88rem}
+.cols{max-width:1100px;margin:16px auto 40px;padding:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:760px){.cols{grid-template-columns:1fr}}
+.col h2{font-size:1.15rem;margin:0 0 10px;padding-bottom:8px;border-bottom:3px solid}
+.col.up h2{border-color:var(--up);color:var(--up)}.col.down h2{border-color:var(--down);color:var(--down)}
+.row{display:flex;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;cursor:pointer;width:100%;text-align:right;font:inherit;color:inherit}
+.row:hover{border-color:var(--accent)}
+.row img,.ph{width:56px;height:56px;border-radius:8px;background:var(--bg);flex:none;object-fit:cover}
+.info{flex:1;min-width:0}
+.name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{color:var(--mute);font-size:.82rem}
+.pct{font-weight:700;font-size:1.1rem;direction:ltr;text-align:left;min-width:70px}
+.up .pct{color:var(--up)}.down .pct{color:var(--down)}
+.empty{color:var(--mute);padding:20px;text-align:center;background:var(--panel);border:1px dashed var(--line);border-radius:10px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);padding:0;width:min(560px,94vw);font-family:inherit}
+dialog::backdrop{background:#0008}
+.m{padding:20px}.m-head{display:flex;gap:14px;align-items:center}
+.m-head img{width:96px;height:96px;border-radius:10px;background:var(--bg)}
+.m-head h3{margin:0}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:16px 0}
+.grid div{background:var(--bg);border-radius:8px;padding:8px 12px}
+.grid b{display:block;font-size:1.05rem}
+.grid span{color:var(--mute);font-size:.8rem}
+svg{width:100%;height:120px;background:var(--bg);border-radius:8px}
+.btns{display:flex;gap:8px;margin-top:14px}
+.btns a,.btns button{flex:1;text-align:center;padding:10px;border-radius:8px;font:inherit;font-weight:500;text-decoration:none;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.btns a{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sres{max-width:1100px;margin:0 auto;padding:0 20px}
+.note{max-width:1100px;margin:0 auto 30px;padding:0 20px;color:var(--mute);font-size:.8rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>سوق المتدات</h1>
+  <p>توقع أسعار ليمتدات روبلوكس لأسبوع قدام، مثل شاشة سوق الأسهم.</p>
+</header>
+<div class="bar">
+  <label for="n">عدد المتدات في كل قائمة</label>
+  <select id="n"><option>5</option><option selected>10</option><option>20</option><option>30</option><option>50</option></select>
+  <input id="q" type="search" placeholder="ابحث عن متد بالاسم...">
+</div>
+<div class="sres" id="sres"></div>
+<div class="status" id="status">جاري التحميل...</div>
+<div class="cols">
+  <section class="col up"><h2>الكسبان (متوقع يرتفع)</h2><div id="gain"></div></section>
+  <section class="col down"><h2>الخسران (متوقع ينزل)</h2><div id="lose"></div></section>
+</div>
+<p class="note">التوقعات إحصائية (انحدار خطي على آخر 30 يوم) وليست نصيحة شراء أو بيع. الأسعار من Roblox وRolimons.</p>
+
+<dialog id="dlg"><div class="m" id="dbody"></div></dialog>
+
+<script>
+const $=s=>document.querySelector(s), fmt=n=>n==null?"-":Number(n).toLocaleString("en-US");
+const sign=p=>(p>0?"+":"")+p.toFixed(1)+"%";
+let timer;
+
+function row(it,cls){
+  const img=it.image?`<img src="${it.image}" alt="" loading="lazy">`:`<div class="ph"></div>`;
+  return `<button class="row" onclick="openItem(${it.id})">${img}
+    <div class="info"><div class="name">${it.name}</div>
+    <div class="sub">الحالي ${fmt(it.rap)} ← المتوقع ${fmt(it.predicted)}</div></div>
+    <div class="pct">${sign(it.pct)}</div></button>`;
+}
+async function load(){
+  const n=$("#n").value;
+  try{
+    const d=await (await fetch("/api/movers?n="+n)).json();
+    $("#gain").innerHTML=d.gainers.map(i=>row(i)).join("")||'<div class="empty">ما فيه بيانات بعد، انتظر شوي.</div>';
+    $("#lose").innerHTML=d.losers.map(i=>row(i)).join("")||'<div class="empty">ما فيه بيانات بعد، انتظر شوي.</div>';
+    const done=d.analyzed>=d.pool;
+    $("#status").textContent=done?`تم تحليل ${d.analyzed} متد.`:`جاري تحليل المتدات: ${d.analyzed} من ${d.pool}. القوائم تتحدث تلقائياً.`;
+    if(!done) setTimeout(load,20000);
+  }catch(e){$("#status").textContent="صار خطأ في التحميل، حدّث الصفحة.";}
+}
+function spark(h){
+  if(!h.length) return "";
+  const mn=Math.min(...h),mx=Math.max(...h),r=(mx-mn)||1;
+  const pts=h.map((v,i)=>`${(i/(h.length-1||1))*300},${110-((v-mn)/r)*100}`).join(" ");
+  return `<svg viewBox="0 0 300 120" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+async function openItem(id){
+  $("#dbody").innerHTML='<p>جاري التحميل...</p>'; $("#dlg").showModal();
+  const d=await (await fetch("/api/item/"+id)).json();
+  if(d.error){$("#dbody").innerHTML=`<p>${d.error}</p><div class="btns"><button onclick="dlg.close()">إغلاق</button></div>`;return;}
+  const cls=d.pct==null?"":(d.pct>=0?"var(--up)":"var(--down)");
+  $("#dbody").innerHTML=`
+   <div class="m-head"><img src="${d.image}" alt=""><div><h3>${d.name}</h3>
+   <div class="sub">${d.acronym||""}${d.rare?" • نادر":""}${d.projected?" • سعره مزيف (projected)":""}</div></div></div>
+   <div class="grid">
+    <div><b>${fmt(d.rap)}</b><span>السعر الحالي (RAP)</span></div>
+    <div><b style="color:${cls}">${fmt(d.predicted)} ${d.pct!=null?"("+sign(d.pct)+")":""}</b><span>المتوقع بعد 7 أيام</span></div>
+    <div><b>${fmt(d.value)}</b><span>القيمة (Value)</span></div>
+    <div><b>${d.confidence!=null?d.confidence+"%":"-"}</b><span>دقة النموذج</span></div>
+    <div><b>${d.demand}</b><span>الطلب</span></div>
+    <div><b>${d.trend}</b><span>الاتجاه</span></div>
+    <div><b>${fmt(d.avg_volume)}</b><span>متوسط المبيعات اليومي</span></div>
+    <div><b>${d.hyped?"نعم":"لا"}</b><span>عليه هايب</span></div>
+   </div>${spark(d.history)}
+   <div class="btns"><a href="${d.link}" target="_blank" rel="noopener">افتح في روبلوكس</a><button onclick="dlg.close()">إغلاق</button></div>`;
+}
+$("#n").onchange=load;
+$("#q").oninput=e=>{
+  clearTimeout(timer); const v=e.target.value;
+  timer=setTimeout(async()=>{
+    if(v.trim().length<2){$("#sres").innerHTML="";return;}
+    const r=await (await fetch("/api/search?q="+encodeURIComponent(v))).json();
+    $("#sres").innerHTML=r.map(i=>`<button class="row" onclick="openItem(${i.id})"><img src="${i.image}" alt=""><div class="info"><div class="name">${i.name}</div><div class="sub">RAP ${fmt(i.rap)}</div></div></button>`).join("");
+  },350);
+};
+const dlg=$("#dlg"); load();
+</script>
+</body>
+</html>
